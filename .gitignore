@@ -1,5 +1,7 @@
 # Self-defined
 build/
+.idea/
+abc.history
 
 # Prerequisites
 *.d

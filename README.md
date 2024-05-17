@@ -29,5 +29,5 @@ Use `./simulator.out -h` to get help.
 
 Example:
 ```shell
-./simulator.out -i circuit/signed-multiplier-16x16.blif
+./simulator.out
 ```
