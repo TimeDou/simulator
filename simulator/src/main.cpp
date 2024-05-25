@@ -13,7 +13,8 @@ parser Cmdline_Parser(int argc, char * argv[])
   option.add <string> ("input1", 'a', "Original Circuit file", false, "circuit/i2c_exact.blif");
   option.add <string> ("input2", 'b', "Approximate Circuit file", false, "circuit/i2c_approx.blif");
   option.add <string> ("file", 'f', "Error report file", false, "test.txt");
-  option.add <int> ("num", 'n', "num. of testing patterns", false, 1 << 16);
+  option.add <string> ("mode", 'm', "Error Metric", false, "er");
+  option.add <int> ("num", 'n', "num. of testing patterns", false, 18);
   option.add <int> ("batch", 'B', "num. of batches", false, 1);
   option.add <int> ("full", 'F', "Full simulation", false, 0);
   option.parse_check(argc, argv);
@@ -28,6 +29,7 @@ int main(int argc, char * argv[])
   string input1 = option.get <string> ("input1");
   string input2 = option.get <string> ("input2");
   string error_file = option.get <string> ("file");
+  string mode = option.get<string>("mode");
   int nFrame = option.get <int> ("num");
   int nBatch = option.get <int> ("batch");
   int fFullSim = option.get <int> ("full");
@@ -47,19 +49,19 @@ int main(int argc, char * argv[])
 
   random_device rd;
   clock_t st = clock();
-  double* ErrorMetrics = MeasureBatchErrorMetrics(pNtk1, pNtk2, nBatch, nFrame, 0, fFullSim);
+  double* ErrorMetrics = MeasureBatchErrorMetrics(pNtk1, pNtk2, nBatch, 1 << nFrame, 0, fFullSim);
   ofstream f_error;
-  f_error.open(error_file.c_str(), ios::app);
-  cout << "#input patterns = " << nFrame << endl;
-  cout << "runtime = " << clock() - st << "us" << endl;
-  cout << "ER = " << *ErrorMetrics << endl;
-  f_error << "ER = " << *ErrorMetrics << endl;
-  cout << "MED = " << *(ErrorMetrics + 1) << endl;
-  f_error << "MED = " << *(ErrorMetrics + 1) << endl;
-  cout << "NMED = " << *(ErrorMetrics + 2) << endl;
-  f_error << "NMED = " << *(ErrorMetrics + 2) << endl;
-  cout << "RMED = " << *(ErrorMetrics + 3) << endl;
-  f_error << "RMED = " << *(ErrorMetrics + 3) << endl;
+  f_error.open(error_file.c_str());
+  if (mode == "er")
+    f_error << *ErrorMetrics << endl;
+  else if (mode == "med")
+    f_error << *(ErrorMetrics + 1) << endl;
+  else if (mode == "nmed")
+    f_error << *(ErrorMetrics + 2) << endl;
+  else if (mode == "rmed")
+    f_error << *(ErrorMetrics + 3) << endl;
+  else
+    DASSERT(0);
   f_error.close();
 
   // recycle memory

@@ -1421,7 +1421,6 @@ double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch,
   // bigFlt ER(0),MED(0),NMED(0);
   double ER = 0, MED = 0, NMED = 0;
   random_device rd;
-  cout<<"The progress is : "<<endl;
   for(int i = 0;i < nBatch; i++){
     unsigned seed;
     if(!isFull)
@@ -1452,8 +1451,6 @@ double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch,
         sum += abs(acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0)));
     }
     NMED += static_cast <double> (sum / static_cast <double>(nFrame));
-    cout<< (double(i+1)/nBatch)*100 <<"\% has been finished!!!"<<endl;
-    cout<<"The current MED is : "<< MED/(i+1) << endl;
   }
 
   *Metrics = static_cast<double>(ER / static_cast <double>(nBatch));
