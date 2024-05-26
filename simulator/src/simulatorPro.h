@@ -116,7 +116,7 @@ public:
 };
 
 double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, unsigned seed, bool isCheck);
-double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch, int nFrame, bool isCheck, bool isFull);
+double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch, int nFrame, bool isCheck, bool isFull, unsigned mode);
 double MeasureAEMR(Abc_Ntk_t * pNtk1, Abc_Ntk_t * pNtk2, int nFrame = 102400, unsigned seed = 314, bool isCheck = true);
 bigInt GetAEMR_FCH(Simulator_Pro_t * pSmlt1, Simulator_Pro_t * pSmlt2, bool isCheck, bool isResub);
 double MeasureRAEM(Abc_Ntk_t * pNtk1, Abc_Ntk_t * pNtk2, int nFrame, unsigned seed, bool isCheck);

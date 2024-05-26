@@ -29,7 +29,7 @@ int main(int argc, char * argv[])
   string input1 = option.get <string> ("input1");
   string input2 = option.get <string> ("input2");
   string error_file = option.get <string> ("file");
-  string mode = option.get<string>("mode");
+  string mode_str = option.get<string>("mode");
   int nFrame = option.get <int> ("num");
   int nBatch = option.get <int> ("batch");
   int fFullSim = option.get <int> ("full");
@@ -49,19 +49,21 @@ int main(int argc, char * argv[])
 
   random_device rd;
   clock_t st = clock();
-  double* ErrorMetrics = MeasureBatchErrorMetrics(pNtk1, pNtk2, nBatch, 1 << nFrame, 0, fFullSim);
-  ofstream f_error;
-  f_error.open(error_file.c_str());
-  if (mode == "er")
-    f_error << *ErrorMetrics << endl;
-  else if (mode == "med")
-    f_error << *(ErrorMetrics + 1) << endl;
-  else if (mode == "nmed")
-    f_error << *(ErrorMetrics + 2) << endl;
-  else if (mode == "rmed")
-    f_error << *(ErrorMetrics + 3) << endl;
+  unsigned mode = 0;
+  if (mode_str == "er")
+    mode = 0;
+  else if (mode_str == "med")
+    mode = 1;
+  else if (mode_str == "nmed")
+    mode = 2;
+  else if (mode_str == "rmed")
+    mode = 3;
   else
     DASSERT(0);
+  double* ErrorMetrics = MeasureBatchErrorMetrics(pNtk1, pNtk2, nBatch, 1 << nFrame, 0, fFullSim, mode);
+  ofstream f_error;
+  f_error.open(error_file.c_str());
+  f_error << *ErrorMetrics << endl;
   f_error.close();
 
   // recycle memory

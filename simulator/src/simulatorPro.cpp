@@ -1411,7 +1411,7 @@ double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, unsi
   return Metrics;
 }
 
-double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch, int nFrame, bool isCheck, bool isFull)
+double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch, int nFrame, bool isCheck, bool isFull, unsigned mode)
 {
   // check PI/PO
   if (isCheck)
@@ -1439,24 +1439,53 @@ double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch,
       smlt2.Input(i);
     smlt2.Simulate();
     // compute
-    ER += GetER(&smlt1, &smlt2, false, false) / static_cast <double> (nFrame);
-    MED += GetAEMR(&smlt1, &smlt2, false, false);
-    bigFlt sum(0);
-    int nPo = Abc_NtkPoNum(pNtk1);
-    for (int k = 0; k < nFrame; ++k) {
-      bigFlt acc = static_cast <bigFlt>(smlt1.GetOutput(0, nPo - 1, k, 0));
-      if (acc != 0.0)
-        sum += abs((acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0))) / acc);
-      else
-        sum += abs(acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0)));
+    switch (mode) {
+      case 0: {
+        ER += GetER(&smlt1, &smlt2, false, false) / static_cast <double> (nFrame);
+        break;
+      }
+      case 1: {
+        MED += GetAEMR(&smlt1, &smlt2, false, false);
+        break;
+      }
+      case 2:
+      case 3: {
+        bigFlt sum(0);
+        int nPo = Abc_NtkPoNum(pNtk1);
+        for (int k = 0; k < nFrame; ++k) {
+          bigFlt acc = static_cast <bigFlt>(smlt1.GetOutput(0, nPo - 1, k, 0));
+          if (acc != 0.0)
+            sum += abs((acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0))) / acc);
+          else
+            sum += abs(acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0)));
+        }
+        NMED += static_cast <double> (sum / static_cast <double>(nFrame));
+        break;
+      }
+      default:
+        DASSERT(0);
     }
-    NMED += static_cast <double> (sum / static_cast <double>(nFrame));
   }
-
-  *Metrics = static_cast<double>(ER / static_cast <double>(nBatch));
-  *(Metrics+1) = static_cast<double>(MED / static_cast <double>(nBatch));
-  *(Metrics+2) = static_cast<double>(NMED);
-  *(Metrics+3) = static_cast<double>(NMED / static_cast <double>(nBatch));
+  switch (mode) {
+    case 0: {
+      *Metrics = static_cast<double>(ER / static_cast <double>(nBatch));
+      break;
+    }
+    case 1: {
+      *Metrics = static_cast<double>(MED / static_cast <double>(nBatch));
+      break;
+    }
+    case 2: {
+      *Metrics = static_cast<double>(NMED);
+      break;
+    }
+    case 3: {
+      *Metrics = static_cast<double>(NMED / static_cast <double>(nBatch));
+      break;
+    }
+    default:
+      DASSERT(0);
+  }
 
   return Metrics;
 }
