@@ -1380,12 +1380,16 @@ void Simulator_Pro_t::UpdateBoolDiff(IN Vec_Ptr_t * vNodes, INOUT vector <tVec> 
   }
 }
 
-double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, unsigned seed, bool isCheck)
+double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, bool isCheck, unsigned mode)
 {
   // check PI/PO
   if (isCheck)
     DASSERT(IOChecker(pNtk1, pNtk2));
-  double* Metrics = (double*)malloc(sizeof(double) * 3); // error rate, mean error distance, normalized mean error distance
+  double* Metrics = (double*)malloc(sizeof(double));
+  // random seed
+  random_device rd;
+  unsigned seed;
+  seed = static_cast <unsigned> (rd());
   // simulation
   Simulator_Pro_t smlt1(pNtk1, nFrame);
   smlt1.Input(seed);
@@ -1395,99 +1399,35 @@ double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, unsi
   smlt2.Simulate();
 
   // compute
-  *Metrics = GetER(&smlt1, &smlt2, false, false) / static_cast <double> (nFrame);
-  *(Metrics + 1) = GetAEMR(&smlt1, &smlt2, false, false);
-  typedef multiprecision::cpp_dec_float_100 bigFlt;
-  bigFlt sum(0);
-  int nPo = Abc_NtkPoNum(pNtk1);
-  for (int k = 0; k < nFrame; ++k) {
-    bigFlt acc = static_cast <bigFlt>(smlt1.GetOutput(0, nPo - 1, k, 0));
-    if (acc != 0.0)
-      sum += abs((acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0))) / acc);
-    else
-      sum += abs(acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0)));
-  }
-  *(Metrics + 2) = static_cast <double> (sum / static_cast <double>(nFrame));
-  return Metrics;
-}
-
-double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch, int nFrame, bool isCheck, bool isFull, unsigned mode)
-{
-  // check PI/PO
-  if (isCheck)
-    DASSERT(IOChecker(pNtk1, pNtk2));
-  double* Metrics = (double*)malloc(sizeof(double) * 4);
-  // error rate, mean error distance, normalized mean error distance
-  // bigFlt ER(0),MED(0),NMED(0);
-  double ER = 0, MED = 0, NMED = 0;
-  random_device rd;
-  for(int i = 0;i < nBatch; i++){
-    unsigned seed;
-    if(!isFull)
-      seed = static_cast <unsigned> (rd());
-    // simulation
-    Simulator_Pro_t smlt1(pNtk1, nFrame);
-    if(!isFull)
-      smlt1.Input(seed);
-    else
-      smlt1.Input(i);
-    smlt1.Simulate();
-    Simulator_Pro_t smlt2(pNtk2, nFrame);
-    if(!isFull)
-      smlt2.Input(seed);
-    else
-      smlt2.Input(i);
-    smlt2.Simulate();
-    // compute
-    switch (mode) {
-      case 0: {
-        ER += GetER(&smlt1, &smlt2, false, false) / static_cast <double> (nFrame);
-        break;
-      }
-      case 1: {
-        MED += GetAEMR(&smlt1, &smlt2, false, false);
-        break;
-      }
-      case 2:
-      case 3: {
-        bigFlt sum(0);
-        int nPo = Abc_NtkPoNum(pNtk1);
-        for (int k = 0; k < nFrame; ++k) {
-          bigFlt acc = static_cast <bigFlt>(smlt1.GetOutput(0, nPo - 1, k, 0));
-          if (acc != 0.0)
-            sum += abs((acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0))) / acc);
-          else
-            sum += abs(acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0)));
-        }
-        NMED += static_cast <double> (sum / static_cast <double>(nFrame));
-        break;
-      }
-      default:
-        DASSERT(0);
-    }
-  }
   switch (mode) {
+    // Error Rate
     case 0: {
-      *Metrics = static_cast<double>(ER / static_cast <double>(nBatch));
-      break;
+      *Metrics = GetER(&smlt1, &smlt2, false, false) / static_cast <double> (nFrame);
+      return Metrics;
     }
+    // Mean Error Distance
     case 1: {
-      *Metrics = static_cast<double>(MED / static_cast <double>(nBatch));
-      break;
+      *Metrics = GetAEMR(&smlt1, &smlt2, false, false);
+      return Metrics;
     }
+    // Mean Relative Error Distance
     case 2: {
-      *Metrics = static_cast<double>(NMED);
-      break;
-    }
-    case 3: {
-      *Metrics = static_cast<double>(NMED / static_cast <double>(nBatch));
-      break;
+      typedef multiprecision::cpp_dec_float_100 bigFlt;
+      bigFlt sum(0);
+      int nPo = Abc_NtkPoNum(pNtk1);
+      for (int k = 0; k < nFrame; ++k) {
+        bigFlt acc = static_cast <bigFlt>(smlt1.GetOutput(0, nPo - 1, k, 0));
+        if (acc != 0.0)
+          sum += abs((acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0))) / acc);
+        else
+          sum += abs(acc - static_cast <bigFlt>(smlt2.GetOutput(0, nPo - 1, k, 0)));
+      }
+      *Metrics = static_cast <double> (sum / static_cast <double>(nFrame));
+      return Metrics;
     }
     default:
       DASSERT(0);
   }
-
-  return Metrics;
 }
 
 double MeasureAEMR(Abc_Ntk_t * pNtk1, Abc_Ntk_t * pNtk2, int nFrame, unsigned seed, bool isCheck)

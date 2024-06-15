@@ -18,8 +18,6 @@ enum class Map_t{SCL, LUT};
 
 
 typedef std::vector <uint64_t> tVec;
-typedef multiprecision::cpp_dec_float_100 bigFlt;
-//typedef multiprecision::int256_t bigInt;
 typedef multiprecision::int512_t bigInt;
 
 class Lac_Cand_t
@@ -115,8 +113,7 @@ public:
   inline uint64_t GetBdCut(Abc_Obj_t * pObj, int cutId, int blockId) const {return bdCuts[pObj->Id][cutId][blockId];}
 };
 
-double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, unsigned seed, bool isCheck);
-double* MeasureBatchErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nBatch, int nFrame, bool isCheck, bool isFull, unsigned mode);
+double* MeasureErrorMetrics(Abc_Ntk_t* pNtk1, Abc_Ntk_t* pNtk2, int nFrame, bool isCheck, unsigned mode);
 double MeasureAEMR(Abc_Ntk_t * pNtk1, Abc_Ntk_t * pNtk2, int nFrame = 102400, unsigned seed = 314, bool isCheck = true);
 bigInt GetAEMR_FCH(Simulator_Pro_t * pSmlt1, Simulator_Pro_t * pSmlt2, bool isCheck, bool isResub);
 double MeasureRAEM(Abc_Ntk_t * pNtk1, Abc_Ntk_t * pNtk2, int nFrame, unsigned seed, bool isCheck);
