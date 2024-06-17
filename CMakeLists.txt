@@ -4,8 +4,27 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Set the project name
-project(als-by-decomposition)
+project(simulator)
 
 # Add sub directories
 add_subdirectory(abc)
-add_subdirectory(simulator)
+
+# Set top directory
+set(TOP_DIR ${PROJECT_SOURCE_DIR})
+
+# Collect source files
+aux_source_directory(${PROJECT_SOURCE_DIR}/src sources)
+
+# Add include paths
+include_directories(${TOP_DIR}/abc/src)
+include_directories(${PROJECT_SOURCE_DIR}/src)
+
+# Add definitions
+add_definitions(-DLIN64 -g -Wall -O3 -std=c++2a)
+
+# Set output path
+set(EXECUTABLE_OUTPUT_PATH ${TOP_DIR})
+
+# Add an executable
+add_executable(${PROJECT_NAME}.out ${sources})
+target_link_libraries(${PROJECT_NAME}.out libabc -lm -ldl -rdynamic -lreadline -ltermcap -lpthread -lstdc++ -lrt -lstdc++fs)
